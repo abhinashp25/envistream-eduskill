@@ -22,6 +22,12 @@ export const metadata = {
   description:
     "Envistream EduSkill offers industry-oriented training, internships, certifications and career development programs in AI, software development, and emerging technology.",
   metadataBase: new URL("https://envistream.org"),
+  // Browser tab icon (favicon) — square icon-only image, readable at 16×16px
+  icons: {
+    icon: "/images/favicon_icon.jpg",
+    shortcut: "/images/favicon_icon.jpg",
+    apple: "/images/favicon_icon.jpg",
+  },
   openGraph: {
     title: "Envistream EduSkill | Industry-Ready Training, Internships & Career Programs",
     description:

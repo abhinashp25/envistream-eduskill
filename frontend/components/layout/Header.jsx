@@ -20,7 +20,7 @@ export default function Header() {
       <div className="container-content flex items-center justify-between h-18 py-3">
         <a href="/" className="flex items-center" aria-label="Envistream EduSkill – Home">
           <Image
-            src="/images/Envistream_logo.jpg"
+            src="/images/Envistream_logo_svg.png"
             alt="Envistream EduSkill Logo"
             width={160}
             height={56}
