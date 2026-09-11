@@ -15,6 +15,30 @@ Live site (current, pre-revamp): [envistream.org](https://envistream.org)
 
 ---
 
+## ⚠️ Stack decision required before continuing
+
+**This is Stack A.** A second, separate project — `envistream-react-stack`
+— was built to match a company-issued tech stack doc
+(`Envistream_EduSkill_Tech_Stack.docx`), which specifies React.js + React
+Router (client-rendered) and PostgreSQL + Prisma instead of what's below.
+
+| | Stack A — this repo | Stack B — `envistream-react-stack` |
+|---|---|---|
+| Source | Original 56-section requirement doc (SEO-first, AI-search-ready mandate) | Company-issued tech stack doc |
+| Frontend | Next.js 14 (SSR) | React.js + Vite + React Router (SPA) |
+| Database | MongoDB + Mongoose | PostgreSQL + Prisma |
+| Status | Homepage built, styled, functional | Auth + course API scaffold only |
+
+**Neither this repo's code nor its file structure has changed as a result
+of Stack B existing.** They are fully separate projects. This section
+exists only so nobody mistakes this for the final decision — get an
+explicit answer from whoever issued the tech stack doc on whether Next.js
+(still React, still satisfies "React.js," and satisfies the SEO mandate
+this repo was built for) is acceptable, before investing further in either
+one.
+
+---
+
 ## Table of contents
 
 - [About](#about)
