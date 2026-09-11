@@ -1,0 +1,299 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Envistream EduSkill — Prisma Schema
+// Database: PostgreSQL
+// ORM:      Prisma v5
+//
+// Entities:
+//   User · Course · Lesson · Enrollment · CourseProgress · Quiz · Question
+//   QuizResult · Certificate · Payment · Notification · InstructorProfile
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  DROPPED
+}
+
+// ─── USER ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(STUDENT)
+  avatar    String?  // Cloudinary URL
+  bio       String?
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  instructorProfile InstructorProfile?
+  enrollments       Enrollment[]
+  quizResults       QuizResult[]
+  certificates      Certificate[]
+  payments          Payment[]
+  notifications     Notification[]
+  courseProgress    CourseProgress[]
+  taughtCourses     Course[]           @relation("InstructorCourses")
+
+  @@map("users")
+}
+
+// ─── INSTRUCTOR PROFILE ───────────────────────────────────────────────────────
+
+model InstructorProfile {
+  id           String  @id @default(uuid())
+  userId       String  @unique
+  title        String? // e.g. "Senior AI Engineer"
+  expertise    String[] // e.g. ["AI", "Python", "Data Science"]
+  linkedIn     String?
+  github       String?
+  website      String?
+  totalStudents Int    @default(0)
+  rating        Float  @default(0.0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("instructor_profiles")
+}
+
+// ─── COURSE ───────────────────────────────────────────────────────────────────
+
+model Course {
+  id           String      @id @default(uuid())
+  title        String
+  slug         String      @unique
+  description  String
+  shortDesc    String?
+  thumbnail    String?     // Cloudinary URL
+  previewVideo String?     // Cloudinary URL
+  price        Float       @default(0.0)
+  currency     String      @default("INR")
+  level        CourseLevel @default(BEGINNER)
+  status       CourseStatus @default(DRAFT)
+  category     String?
+  tags         String[]
+  duration     Int?        // total hours (estimated)
+  instructorId String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  instructor   User         @relation("InstructorCourses", fields: [instructorId], references: [id])
+  lessons      Lesson[]
+  enrollments  Enrollment[]
+  quizzes      Quiz[]
+  certificates Certificate[]
+  payments     Payment[]
+
+  @@map("courses")
+}
+
+// ─── LESSON ───────────────────────────────────────────────────────────────────
+
+model Lesson {
+  id          String  @id @default(uuid())
+  courseId    String
+  title       String
+  description String?
+  videoUrl    String? // Cloudinary URL
+  documentUrl String? // Cloudinary URL — PDF / slides
+  order       Int     // sort order within the course
+  duration    Int?    // minutes
+  isFree      Boolean @default(false) // preview-accessible without enrollment
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  course   Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress CourseProgress[]
+
+  @@map("lessons")
+}
+
+// ─── ENROLLMENT ───────────────────────────────────────────────────────────────
+
+model Enrollment {
+  id         String           @id @default(uuid())
+  userId     String
+  courseId   String
+  status     EnrollmentStatus @default(ACTIVE)
+  enrolledAt DateTime         @default(now())
+  completedAt DateTime?
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId]) // a user can enroll in a course only once
+  @@map("enrollments")
+}
+
+// ─── COURSE PROGRESS ──────────────────────────────────────────────────────────
+
+model CourseProgress {
+  id          String   @id @default(uuid())
+  userId      String
+  lessonId    String
+  completedAt DateTime @default(now())
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("course_progress")
+}
+
+// ─── QUIZ ─────────────────────────────────────────────────────────────────────
+
+model Quiz {
+  id          String  @id @default(uuid())
+  courseId    String
+  title       String
+  description String?
+  passMark    Int     @default(70) // percentage required to pass
+  timeLimit   Int?    // minutes; null = unlimited
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  course    Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions Question[]
+  results   QuizResult[]
+
+  @@map("quizzes")
+}
+
+// ─── QUESTION ─────────────────────────────────────────────────────────────────
+
+model Question {
+  id            String   @id @default(uuid())
+  quizId        String
+  text          String
+  options       Json     // Array of option strings, e.g. ["A","B","C","D"]
+  correctAnswer Int      // Index of the correct option (0-based)
+  explanation   String?  // shown after the user answers
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  // Relations
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("questions")
+}
+
+// ─── QUIZ RESULT ──────────────────────────────────────────────────────────────
+
+model QuizResult {
+  id        String   @id @default(uuid())
+  userId    String
+  quizId    String
+  score     Float    // percentage score, e.g. 85.0
+  passed    Boolean
+  answers   Json     // Array of {questionId, selectedAnswer} submitted
+  takenAt   DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_results")
+}
+
+// ─── CERTIFICATE ──────────────────────────────────────────────────────────────
+
+model Certificate {
+  id         String   @id @default(uuid())
+  userId     String
+  courseId   String
+  issuedAt   DateTime @default(now())
+  url        String   // Cloudinary URL of the generated certificate PDF / image
+  uniqueCode String   @unique @default(uuid()) // verifiable certificate ID
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId]) // one certificate per user per course
+  @@map("certificates")
+}
+
+// ─── PAYMENT ──────────────────────────────────────────────────────────────────
+
+model Payment {
+  id              String        @id @default(uuid())
+  userId          String
+  courseId        String
+  amount          Float
+  currency        String        @default("INR")
+  status          PaymentStatus @default(PENDING)
+  gateway         String?       // e.g. "razorpay", "stripe"
+  gatewayOrderId  String?       // ID from payment gateway
+  gatewayPaymentId String?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// ─── NOTIFICATION ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info") // "info" | "success" | "warning" | "error"
+  read      Boolean  @default(false)
+  link      String?  // optional action URL
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
