@@ -1,13 +1,23 @@
-# Frontend
+# ─── Frontend ─────────────────────────────────────────────────────────────────
 frontend/node_modules
 frontend/.next
 frontend/.env.local
 frontend/.env
 
-# Backend
+# ─── Backend ──────────────────────────────────────────────────────────────────
 backend/node_modules
 backend/.env
+backend/prisma/*.db
+backend/prisma/*.db-journal
 
-# General
+# ─── Uploads (local temp before Cloudinary) ───────────────────────────────────
+backend/uploads/
+
+# ─── Prisma client (auto-generated) ──────────────────────────────────────────
+backend/node_modules/.prisma
+
+# ─── General ──────────────────────────────────────────────────────────────────
 .DS_Store
 *.log
+*.env.local
+.env*.local
