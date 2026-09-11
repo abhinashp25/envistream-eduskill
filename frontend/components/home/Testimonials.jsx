@@ -10,7 +10,7 @@ export default function Testimonials() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {testimonials.map((t) => (
-            <blockquote key={t.name} className="border-l-2 border-primary pl-5">
+            <blockquote key={t.role} className="border-l-2 border-primary pl-5">
               <p className="text-ink/80 leading-relaxed mb-4">&ldquo;{t.quote}&rdquo;</p>
               <footer className="text-sm">
                 <span className="font-medium text-ink">{t.name}</span>

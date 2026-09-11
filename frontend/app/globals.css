@@ -49,10 +49,12 @@
   }
 
   .glass-panel-dark {
-    background: rgba(13, 43, 62, 0.55);
+    background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-top: 1px solid rgba(229, 138, 46, 0.5);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
     color: #fff;
   }
 
@@ -78,4 +80,57 @@
       -webkit-backdrop-filter: none;
     }
   }
+}
+
+/*
+  ── Kill Google Translate's default toolbar completely ───────────────────────
+  Google Translate injects an iframe banner at the top of the page and
+  shifts the body down by ~40px. All rules below undo that so our custom
+  language selector is the only UI the user sees.
+*/
+
+/* Hide the injected iframe banner */
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame,
+.goog-te-menu-frame,
+.goog-te-balloon-frame {
+  display: none !important;
+  height:  0    !important;
+  width:   0    !important;
+}
+
+/* Hide the widget container and any leftover skip-translate wrappers */
+.skiptranslate,
+.goog-te-gadget,
+#google_translate_element {
+  display: none !important;
+  height:  0    !important;
+}
+
+/* Kill tooltip / highlight overlays Google sometimes adds */
+#goog-gt-tt,
+.goog-tooltip,
+.goog-tooltip-card {
+  display: none !important;
+}
+
+.goog-text-highlight {
+  background: none        !important;
+  box-shadow: none        !important;
+}
+
+/* Prevent Google Translate from pushing body down (it sets body { top: -40px }) */
+body {
+  top:      0        !important;
+  position: relative !important;
+}
+
+html.translated-ltr,
+html.translated-rtl {
+  margin-top: 0 !important;
+}
+
+.translated-ltr body,
+.translated-rtl body {
+  top: 0 !important;
 }
