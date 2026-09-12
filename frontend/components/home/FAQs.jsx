@@ -14,10 +14,8 @@ export default function FAQs() {
     <section className="py-20 md:py-28 bg-surface-alt border-y border-line">
       <div className="container-content max-w-3xl">
         <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-3">
-            <span>Section 11</span>
-            <span>•</span>
-            <span>Frequently Asked Questions</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-3">
+            Frequently Asked Questions
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-ink mb-4">
             Everything You Need to Know
