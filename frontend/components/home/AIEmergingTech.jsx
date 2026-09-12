@@ -51,10 +51,8 @@ export default function AIEmergingTech() {
       <div className="container-content relative">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-16">
           <div className="lg:col-span-5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-accent-light text-xs font-semibold uppercase tracking-wider mb-3">
-              <span>Section 5</span>
-              <span>•</span>
-              <span>AI & Emerging Technology</span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 text-accent-light text-xs font-semibold uppercase tracking-wider mb-3">
+              Next-Gen AI &amp; Tech
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-5 leading-tight">
               Future-Proofing Your Career in the Age of AI
