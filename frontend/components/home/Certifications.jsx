@@ -17,10 +17,8 @@ export default function Certifications() {
     <section className="relative py-20 md:py-28 border-y border-line overflow-hidden bg-gradient-to-tr from-primary/5 via-surface-alt to-accent/5">
       <div className="container-content relative grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         <div className="lg:col-span-7">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-3">
-            <span>Section 9</span>
-            <span>•</span>
-            <span>Accredited Certifications</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-3">
+            Accredited Certifications
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-ink mb-5 leading-tight">
             Industry-Recognized, Verifiable Credentials

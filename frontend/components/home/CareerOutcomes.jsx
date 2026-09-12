@@ -30,10 +30,8 @@ export default function CareerOutcomes() {
     <section className="py-20 md:py-28 bg-white relative">
       <div className="container-content">
         <div className="max-w-3xl mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-3">
-            <span>Section 10</span>
-            <span>•</span>
-            <span>Career Pathways &amp; Outcomes</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-3">
+            Career Pathways &amp; Outcomes
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-ink mb-4">
             Where Our Practical Programs Actually Lead
