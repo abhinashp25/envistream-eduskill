@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Nav links ───────────────────────────────────────────────────────────────
@@ -11,6 +12,7 @@ const navLinks = [
   { label: "Internships",      href: "/internships" },
   { label: "Training",         href: "/training" },
   { label: "For Institutions", href: "/for-institutions" },
+  { label: "Verify",           href: "/verify-certificate" },
   { label: "Resources",        href: "/resources" },
 ];
 
@@ -57,12 +59,19 @@ function applyLanguage(langCode) {
 }
 
 export default function Header() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+
   const [open,        setOpen]        = useState(false);
   const [scrolled,    setScrolled]    = useState(false);
   const [navVisible,  setNavVisible]  = useState(true);
   const [hoveredLink, setHoveredLink] = useState(null);
   const [langOpen,    setLangOpen]    = useState(false);
   const [currentLang, setCurrentLang] = useState("en");
+
+  // On the home page before scrolling, we have the dark hero section.
+  // Everywhere else (about, courses, internships, verify, etc.) we have a light background.
+  const isDarkHero = isHome && !scrolled;
 
   const lastScrollY = useRef(0);
   const hideTimerRef = useRef(null);
@@ -160,19 +169,19 @@ export default function Header() {
           ═══════════════════════════════════════════════════════════════════ */}
       <div
         className={`hidden xl:flex items-center justify-between gap-3 max-w-content mx-auto transition-all duration-300 ${
-          scrolled
+          !isDarkHero
             ? "rounded-full px-5 py-2.5"
             : "px-4 py-1"
         }`}
         style={
-          scrolled
+          !isDarkHero
             ? {
-                background: "rgba(255, 255, 255, 0.72)",
+                background: "rgba(255, 255, 255, 0.90)",
                 backdropFilter: "blur(24px) saturate(190%)",
                 WebkitBackdropFilter: "blur(24px) saturate(190%)",
-                border: "1px solid rgba(255, 255, 255, 0.85)",
+                border: "1px solid rgba(0, 24, 48, 0.12)",
                 boxShadow:
-                  "0 14px 40px -10px rgba(0, 24, 48, 0.12), 0 2px 6px -1px rgba(0, 0, 0, 0.04), inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 2px 0 rgba(0, 0, 0, 0.02)",
+                  "0 10px 30px -8px rgba(0, 24, 48, 0.12), 0 2px 6px -1px rgba(0, 0, 0, 0.04), inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95)",
               }
             : undefined
         }
@@ -180,7 +189,7 @@ export default function Header() {
         {/* Dynamic Logo */}
         <a href="/" aria-label="Envistream EduSkill – Home" className="flex-shrink-0">
           <Image
-            src={scrolled ? "/images/Envistream_logo_svg.png" : "/images/Envistream_logo_white.png"}
+            src={isDarkHero ? "/images/Envistream_logo_white.png" : "/images/Envistream_logo_svg.png"}
             alt="Envistream EduSkill Logo"
             width={140}
             height={48}
@@ -193,7 +202,7 @@ export default function Header() {
         <nav
           className="flex items-center gap-0.5 rounded-full px-2 py-0.5 transition-all duration-300"
           style={
-            !scrolled
+            isDarkHero
               ? {
                   background: "rgba(255, 255, 255, 0.50)",
                   backdropFilter: "blur(20px) saturate(180%)",
@@ -203,11 +212,8 @@ export default function Header() {
                     "0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 1.5px rgba(255, 255, 255, 0.70)",
                 }
               : {
-                  background: "rgba(255, 255, 255, 0.35)",
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255, 255, 255, 0.60)",
-                  boxShadow: "none",
+                  background: "rgba(0, 0, 0, 0.03)",
+                  border: "1px solid rgba(0, 0, 0, 0.05)",
                 }
           }
           onMouseLeave={() => setHoveredLink(null)}
@@ -218,9 +224,9 @@ export default function Header() {
               href={link.href}
               onMouseEnter={() => setHoveredLink(link.href)}
               className={`relative px-3 py-1 rounded-full text-[13px] font-medium tracking-tight transition-colors duration-200 z-10 ${
-                scrolled
-                  ? "text-ink hover:text-primary"
-                  : "text-[#0e273c] hover:text-primary font-semibold"
+                isDarkHero
+                  ? "text-[#0e273c] hover:text-primary font-semibold"
+                  : "text-ink hover:text-primary font-semibold"
               }`}
             >
               {link.label}
@@ -239,9 +245,9 @@ export default function Header() {
               aria-label="Select language"
               onClick={() => setLangOpen(!langOpen)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${
-                scrolled
-                  ? "text-ink hover:bg-black/5"
-                  : "text-white/90 hover:bg-white/15"
+                isDarkHero
+                  ? "text-white/90 hover:bg-white/15"
+                  : "text-ink hover:bg-black/5 font-medium"
               }`}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -298,7 +304,7 @@ export default function Header() {
           <div
             className="w-px h-4"
             style={{
-              background: scrolled ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.25)",
+              background: isDarkHero ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)",
             }}
           />
 
@@ -306,9 +312,9 @@ export default function Header() {
           <a
             href="/contact"
             className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors whitespace-nowrap ${
-              scrolled
-                ? "border border-black/20 text-ink hover:bg-black/5"
-                : "border border-white/40 text-white hover:bg-white/15"
+              isDarkHero
+                ? "border border-white/40 text-white hover:bg-white/15"
+                : "border border-ink/25 text-ink hover:bg-black/5"
             }`}
           >
             Contact Us
@@ -333,19 +339,19 @@ export default function Header() {
           ═══════════════════════════════════════════════════════════════════ */}
       <div
         className={`flex xl:hidden items-center justify-between transition-all duration-300 ${
-          scrolled
+          !isDarkHero
             ? "rounded-full px-4 py-2"
             : "px-2 py-1"
         }`}
         style={
-          scrolled
+          !isDarkHero
             ? {
-                background: "rgba(255, 255, 255, 0.75)",
+                background: "rgba(255, 255, 255, 0.90)",
                 backdropFilter: "blur(24px) saturate(190%)",
                 WebkitBackdropFilter: "blur(24px) saturate(190%)",
-                border: "1px solid rgba(255, 255, 255, 0.85)",
+                border: "1px solid rgba(0, 24, 48, 0.12)",
                 boxShadow:
-                  "0 12px 35px -8px rgba(0, 24, 48, 0.12), inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95)",
+                  "0 10px 30px -8px rgba(0, 24, 48, 0.12), inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95)",
               }
             : undefined
         }
@@ -358,12 +364,12 @@ export default function Header() {
           aria-expanded={open}
           onClick={() => setOpen(!open)}
           className={`p-2.5 rounded-full transition-all active:scale-95 ${
-            scrolled
+            !isDarkHero
               ? "bg-black/5 border border-black/10 text-ink hover:bg-black/10"
               : "text-[#0e273c] shadow-sm hover:bg-white/40"
           }`}
           style={
-            !scrolled
+            isDarkHero
               ? {
                   background: "rgba(255, 255, 255, 0.55)",
                   backdropFilter: "blur(16px)",
@@ -384,7 +390,7 @@ export default function Header() {
         {/* Logo */}
         <a href="/" aria-label="Envistream EduSkill – Home" className="flex items-center">
           <Image
-            src={scrolled ? "/images/Envistream_logo_svg.png" : "/images/Envistream_logo_white.png"}
+            src={isDarkHero ? "/images/Envistream_logo_white.png" : "/images/Envistream_logo_svg.png"}
             alt="Envistream EduSkill"
             width={120}
             height={38}
