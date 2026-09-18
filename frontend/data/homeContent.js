@@ -6,7 +6,9 @@
  * benefits, projects, and contact info.
  */
 
-export const courses = [
+import { allCourses, courseCategories } from "./coursesData";
+
+const baseCourses = [
   {
     id: "course-ai-genai",
     slug: "artificial-intelligence",
@@ -177,6 +179,42 @@ export const courses = [
   },
 ];
 
+const existingSlugs = new Set(baseCourses.map((c) => c.slug));
+
+export const courses = [
+  ...baseCourses,
+  ...allCourses
+    .filter((c) => !existingSlugs.has(c.slug))
+    .map((c) => ({
+      id: `course-${c.slug}`,
+      slug: c.slug,
+      name: c.title,
+      category: c.category,
+      level: c.level || "Beginner to Advanced",
+      duration: c.duration,
+      format: "Hybrid (Virtual & Lab)",
+      badge: c.rating >= 4.9 ? "Top Rated" : "High Placement",
+      rating: c.rating || 4.8,
+      studentsCount: c.studentsCount || "850+",
+      shortDescription: c.description,
+      description: `${c.title} — ${c.description} Comprehensive curriculum aligned with top IT firms and industry hiring standards.`,
+      skills: c.skills || ["Hands-on Projects", "Industry Mentorship"],
+      curriculum: [
+        { module: "Module 1", title: `Foundations & Core Principles of ${c.title}` },
+        { module: "Module 2", title: "Hands-on Architectures & Modern Tools" },
+        { module: "Module 3", title: "Real-world Practical Implementation & Labs" },
+        { module: "Module 4", title: "Enterprise Best Practices & Optimization" },
+        { module: "Module 5", title: "Capstone Project & Mentorship Review" },
+      ],
+      certification: "ISO & AICTE-Aligned Course Completion & Verifiable Certificate",
+      eligibility: "Students, fresh graduates, or working professionals with basic logic skills",
+      fees: c.fees || "₹12,999",
+      discount: "Early Bird Available",
+    })),
+];
+
+export { courseCategories };
+
 export const internshipDomains = [
   {
     id: "ai-ml",
@@ -203,18 +241,6 @@ export const internshipDomains = [
       "Collaborate in sprint cycles building responsive web applications using React, Node.js, Express, and PostgreSQL.",
   },
   {
-    id: "qa-testing",
-    title: "Software Testing & Automation (Cypress)",
-    icon: "check-circle",
-    duration: "4 to 8 Weeks",
-    mode: "Virtual / Lab",
-    badge: "High Demand",
-    eligibility: "Graduates interested in Quality Assurance & QA Automation",
-    projects: "End-to-end Cypress regression test suite, REST API Postman automation",
-    description:
-      "Hands-on execution of test plans, bug lifecycle reports in JIRA, and writing maintainable automated test scripts.",
-  },
-  {
     id: "data-analytics",
     title: "Data Analytics & Business Intelligence",
     icon: "chart-bar",
@@ -225,6 +251,66 @@ export const internshipDomains = [
     projects: "Placement Trends Analytics Dashboard, Customer Churn Prediction Model",
     description:
       "Work with real enterprise datasets, generate executive visualization reports, and automate data extraction pipelines.",
+  },
+  {
+    id: "cybersecurity",
+    title: "Cybersecurity & SOC Defense Operations",
+    icon: "shield",
+    duration: "4 to 12 Weeks",
+    mode: "Virtual / Lab",
+    badge: "High Demand",
+    eligibility: "B.Tech, BCA, MCA & Tech graduates interested in Security",
+    projects: "SOC Incident Triage, Vulnerability Assessment, Wireshark Network Audit",
+    description:
+      "Hands-on red/blue team exercises, security log analysis, and penetration testing on realistic CTF lab networks.",
+  },
+  {
+    id: "cloud-devops",
+    title: "Cloud DevOps & Kubernetes Infrastructure",
+    icon: "cloud",
+    duration: "4 to 12 Weeks",
+    mode: "Virtual / Lab",
+    badge: "Cloud Certified",
+    eligibility: "B.Tech, MCA, BCA & System Admin aspirants",
+    projects: "Dockerized Microservice Deployment, GitHub Actions CI/CD Pipeline, AWS VPC Setup",
+    description:
+      "Learn modern Infrastructure as Code, container orchestration, and continuous integration workflows on AWS.",
+  },
+  {
+    id: "mobile-dev",
+    title: "Mobile App Development (Flutter & React Native)",
+    icon: "mobile",
+    duration: "4 to 12 Weeks",
+    mode: "Virtual / Lab",
+    badge: "Cross-Platform",
+    eligibility: "B.Tech, BCA, MCA & creative frontend developers",
+    projects: "Campus Delivery App, Real-Time Chat System, Offline-First SQLite App",
+    description:
+      "Build native-performance iOS & Android mobile applications with state management, REST APIs, and push notifications.",
+  },
+  {
+    id: "java-enterprise",
+    title: "Java Full Stack & Spring Boot Enterprise",
+    icon: "server",
+    duration: "6 to 12 Weeks",
+    mode: "Virtual / Classroom",
+    badge: "MNC Standard",
+    eligibility: "B.Tech, MCA, BCA graduates aiming for Tier-1 IT companies",
+    projects: "Banking Ledger Microservice, Spring Security JWT OAuth2, Hibernate Data Layer",
+    description:
+      "Industry-standard Java architecture, multithreading, REST APIs, and relational databases for corporate enterprise software.",
+  },
+  {
+    id: "qa-testing",
+    title: "Software Testing & Automation (Cypress)",
+    icon: "check-circle",
+    duration: "4 to 8 Weeks",
+    mode: "Virtual / Lab",
+    badge: "High Demand",
+    eligibility: "Graduates interested in Quality Assurance & QA Automation",
+    projects: "End-to-end Cypress regression test suite, REST API Postman automation",
+    description:
+      "Hands-on execution of test plans, bug lifecycle reports in JIRA, and writing maintainable automated test scripts.",
   },
   {
     id: "digital-growth",

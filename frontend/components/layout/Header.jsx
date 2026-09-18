@@ -4,16 +4,20 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import NavDropdown from "./NavDropdown";
+import { navSections } from "@/data/navigationData";
+import EnquiryModal from "@/components/common/EnquiryModal";
 
 // ─── Nav links ───────────────────────────────────────────────────────────────
 const navLinks = [
-  { label: "About Us",         href: "/about" },
-  { label: "Courses",          href: "/courses" },
-  { label: "Internships",      href: "/internships" },
-  { label: "Training",         href: "/training" },
-  { label: "For Institutions", href: "/for-institutions" },
-  { label: "Verify",           href: "/verify-certificate" },
-  { label: "Resources",        href: "/resources" },
+  { label: "About Us",           id: "about",       href: "/about" },
+  { label: "Courses",            id: "courses",     href: "/courses" },
+  { label: "Internships",        id: "internships", href: "/internships" },
+  { label: "Corporate Training", id: "training",    href: "/training" },
+  { label: "Career",             id: "career",      href: "/training#placement" },
+  { label: "Resources",          id: "resources",   href: "/resources" },
+  { label: "Contact",            id: "contact",     href: "/contact" },
 ];
 
 // ─── Languages — Indian (Odia, Hindi, English compulsory) + International ────
@@ -62,21 +66,64 @@ export default function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
 
-  const [open,        setOpen]        = useState(false);
-  const [scrolled,    setScrolled]    = useState(false);
-  const [navVisible,  setNavVisible]  = useState(true);
-  const [hoveredLink, setHoveredLink] = useState(null);
-  const [langOpen,    setLangOpen]    = useState(false);
-  const [currentLang, setCurrentLang] = useState("en");
+  const [open,           setOpen]           = useState(false);
+  const [scrolled,       setScrolled]       = useState(false);
+  const [navVisible,     setNavVisible]     = useState(true);
+  const [hoveredLink,    setHoveredLink]    = useState(null);
+  const [langOpen,       setLangOpen]       = useState(false);
+  const [currentLang,    setCurrentLang]    = useState("en");
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [enquiryOpen,    setEnquiryOpen]    = useState(false);
+  const menuContainerRef = useRef(null);
+  const dropdownTimerRef = useRef(null);
+  const navRefs          = useRef([]);  // refs to each nav <a> for keyboard focus
 
-  // On the home page before scrolling, we have the dark hero section.
-  // Everywhere else (about, courses, internships, verify, etc.) we have a light background.
+  const handleNavEnter = (id) => {
+    if (dropdownTimerRef.current) clearTimeout(dropdownTimerRef.current);
+    setHoveredLink(id);
+    setActiveDropdown(id);
+  };
+
+  const handleNavLeave = () => {
+    dropdownTimerRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+      setHoveredLink(null);
+    }, 200);
+  };
+
+  // ── Keyboard navigation: ←→ move between items, ↓ open, ↑/Esc close ──────
+  const handleKeyDown = (e, idx, section, id) => {
+    switch (e.key) {
+      case "ArrowRight":
+        e.preventDefault();
+        navRefs.current[Math.min(idx + 1, navLinks.length - 1)]?.focus();
+        break;
+      case "ArrowLeft":
+        e.preventDefault();
+        navRefs.current[Math.max(idx - 1, 0)]?.focus();
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        if (section) { setActiveDropdown(id); setHoveredLink(id); }
+        break;
+      case "ArrowUp":
+      case "Escape":
+        e.preventDefault();
+        setActiveDropdown(null);
+        setHoveredLink(null);
+        navRefs.current[idx]?.focus();
+        break;
+      default:
+        break;
+    }
+  };
+
+  // On the home page before scrolling → dark hero. Everywhere else → light bg.
   const isDarkHero = isHome && !scrolled;
 
-  const lastScrollY = useRef(0);
+  const lastScrollY  = useRef(0);
   const hideTimerRef = useRef(null);
 
-  // Clear 10s timer helper
   const clearHideTimer = useCallback(() => {
     if (hideTimerRef.current) {
       clearTimeout(hideTimerRef.current);
@@ -84,45 +131,34 @@ export default function Header() {
     }
   }, []);
 
-  // 10-second auto-hide timer after scrolling UP
   const startHideTimer = useCallback(() => {
     clearHideTimer();
     hideTimerRef.current = setTimeout(() => {
-      if (window.scrollY > 60) {
-        setNavVisible(false);
-      }
-    }, 10000); // 10 seconds
+      if (window.scrollY > 60) setNavVisible(false);
+    }, 10000);
   }, [clearHideTimer]);
 
   // ── Scroll handling ────────────────────────────────────────────────────────
   useEffect(() => {
     const THRESHOLD = 60;
-
     const onScroll = () => {
       const y = window.scrollY;
-
       if (y <= THRESHOLD) {
-        // At top: always visible, not scrolled, clear hide timer
         setScrolled(false);
         setNavVisible(true);
         clearHideTimer();
       } else {
         setScrolled(true);
-
         if (y > lastScrollY.current + 8) {
-          // Scrolling DOWN → hide immediately
           setNavVisible(false);
           clearHideTimer();
         } else if (y < lastScrollY.current - 8) {
-          // Scrolling UP → show immediately, stay for 10 sec
           setNavVisible(true);
           startHideTimer();
         }
       }
-
       lastScrollY.current = y;
     };
-
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => {
@@ -139,6 +175,20 @@ export default function Header() {
     return () => document.removeEventListener("click", close);
   }, [langOpen]);
 
+  // ── Close menus on route change ────────────────────────────────────────
+  useEffect(() => { setActiveDropdown(null); }, [pathname]);
+
+  useEffect(() => {
+    if (!activeDropdown) return;
+    const handleClickOutside = (e) => {
+      if (menuContainerRef.current && !menuContainerRef.current.contains(e.target)) {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [activeDropdown]);
+
   function handleLangSelect(code) {
     setCurrentLang(code);
     setLangOpen(false);
@@ -148,11 +198,9 @@ export default function Header() {
   return (
     <header
       onMouseEnter={clearHideTimer}
-      onMouseLeave={() => {
-        if (scrolled) startHideTimer();
-      }}
-      className={`fixed top-0 left-0 right-0 z-50 px-3 sm:px-6 md:px-8 transition-all duration-300 ${
-        scrolled ? "pt-3 pb-2" : "pt-5 pb-3"
+      onMouseLeave={() => { if (scrolled) startHideTimer(); }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        scrolled ? "px-4 sm:px-6 pt-2.5 pb-2" : "px-5 sm:px-8 pt-5 pb-0"
       } ${
         navVisible || open
           ? "opacity-100 translate-y-0"
@@ -161,32 +209,41 @@ export default function Header() {
     >
 
       {/* ═══════════════════════════════════════════════════════════════════
-          DESKTOP WINDOW VIEW ONLY (≥ 1280px / xl:flex)
-          Full nav bar is displayed only in full window view!
+          DESKTOP ≥ 1280px — Infosys exact TWO-STATE layout
 
-          NOT scrolled → transparent header, white logo, nav links in glass pill
-          Scrolled     → full liquid glass pill across bar, colored logo, dark text
+          NOT scrolled (on hero)
+            • transparent wrapper — no background on the outer div
+            • Logo floats LEFT (no container)
+            • Nav links in their own frosted CENTER pill
+            • Language + Enquire float RIGHT (no container)
+
+          Scrolled
+            • Entire row becomes one white frosted pill (glass bar)
+            • Logo left · nav center · CTA right — same positions, now inside pill
           ═══════════════════════════════════════════════════════════════════ */}
       <div
-        className={`hidden xl:flex items-center justify-between gap-3 max-w-content mx-auto transition-all duration-300 ${
-          !isDarkHero
-            ? "rounded-full px-5 py-2.5"
-            : "px-4 py-1"
+        ref={menuContainerRef}
+        className={`hidden xl:flex items-center justify-between max-w-[1280px] mx-auto relative transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          scrolled
+            ? "rounded-full px-5 py-2"      // scrolled: one pill bar
+            : "rounded-none px-0 py-0"      // hero: transparent row
         }`}
         style={
-          !isDarkHero
+          scrolled
             ? {
-                background: "rgba(255, 255, 255, 0.90)",
-                backdropFilter: "blur(24px) saturate(190%)",
-                WebkitBackdropFilter: "blur(24px) saturate(190%)",
-                border: "1px solid rgba(0, 24, 48, 0.12)",
+                // ── SCROLLED STATE: white frosted glass pill ──────────────
+                background:        "rgba(255, 255, 255, 0.93)",
+                backdropFilter:    "blur(28px) saturate(200%)",
+                WebkitBackdropFilter: "blur(28px) saturate(200%)",
+                border:            "1px solid rgba(0, 24, 48, 0.09)",
                 boxShadow:
-                  "0 10px 30px -8px rgba(0, 24, 48, 0.12), 0 2px 6px -1px rgba(0, 0, 0, 0.04), inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95)",
+                  "0 8px 30px -6px rgba(0, 24, 48, 0.12), 0 2px 8px -2px rgba(0,0,0,0.05), inset 0 1.5px 1px rgba(255,255,255,0.98)",
               }
-            : undefined
+            : undefined   // ── HERO STATE: transparent wrapper, no bg ──────
         }
       >
-        {/* Dynamic Logo */}
+
+        {/* ── Logo — always LEFT ─────────────────────────────────────────── */}
         <a href="/" aria-label="Envistream EduSkill – Home" className="flex-shrink-0">
           <Image
             src={isDarkHero ? "/images/Envistream_logo_white.png" : "/images/Envistream_logo_svg.png"}
@@ -194,48 +251,111 @@ export default function Header() {
             width={140}
             height={48}
             priority
-            className="h-9 w-auto object-contain transition-opacity duration-200"
+            className="h-8 w-auto object-contain transition-opacity duration-200"
           />
         </a>
 
-        {/* Nav links — Infosys exact compact frosted glass pill */}
+        {/* ── Nav links — CENTER ─────────────────────────────────────────── */}
+        {/*
+            HERO:    own frosted glass pill (Infosys center floating pill)
+            Scrolled: plain row of links inside the outer white bar
+        */}
         <nav
-          className="flex items-center gap-0.5 rounded-full px-2 py-0.5 transition-all duration-300"
+          className="flex items-center gap-0.5 transition-all duration-300"
           style={
             isDarkHero
               ? {
-                  background: "rgba(255, 255, 255, 0.50)",
-                  backdropFilter: "blur(20px) saturate(180%)",
-                  WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                  border: "1px solid rgba(255, 255, 255, 0.55)",
-                  boxShadow:
-                    "0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 1.5px rgba(255, 255, 255, 0.70)",
+                  background:           "rgba(255, 255, 255, 0.74)",
+                  backdropFilter:       "blur(20px) saturate(175%)",
+                  WebkitBackdropFilter: "blur(20px) saturate(175%)",
+                  border:               "1px solid rgba(255, 255, 255, 0.72)",
+                  boxShadow:            "0 4px 20px rgba(0,0,0,0.07), inset 0 1px 1.5px rgba(255,255,255,0.80)",
+                  borderRadius:         "9999px",
+                  padding:              "4px 8px",
                 }
               : {
-                  background: "rgba(0, 0, 0, 0.03)",
-                  border: "1px solid rgba(0, 0, 0, 0.05)",
+                  borderRadius: "9999px",
+                  padding:      "2px 4px",
                 }
           }
-          onMouseLeave={() => setHoveredLink(null)}
+          onMouseLeave={handleNavLeave}
         >
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onMouseEnter={() => setHoveredLink(link.href)}
-              className={`relative px-3 py-1 rounded-full text-[13px] font-medium tracking-tight transition-colors duration-200 z-10 ${
-                isDarkHero
-                  ? "text-[#0e273c] hover:text-primary font-semibold"
-                  : "text-ink hover:text-primary font-semibold"
-              }`}
-            >
-              {link.label}
-            </a>
-          ))}
+          {navLinks.map((link, idx) => {
+            const section    = navSections[link.id];
+            const isOpen     = activeDropdown === link.id;
+            const alignRight = idx >= 4;
+
+            return (
+              <div
+                key={link.id || link.href}
+                className="relative"
+                onMouseEnter={() => handleNavEnter(link.id)}
+                onMouseLeave={handleNavLeave}
+              >
+                {/* Antigravity sliding pill — sibling to Link, renders behind text */}
+                {hoveredLink === link.id && (
+                  <motion.div
+                    layoutId="nav-pill"
+                    className={`absolute inset-0 rounded-full pointer-events-none ${
+                      isDarkHero ? "bg-white/30" : "bg-black/[0.08]"
+                    }`}
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+
+                <Link
+                  ref={(el) => { navRefs.current[idx] = el; }}
+                  href={link.href}
+                  onClick={() => setActiveDropdown(null)}
+                  onKeyDown={(e) => handleKeyDown(e, idx, section, link.id)}
+                  className={`relative px-3 py-1.5 rounded-full text-[13px] font-semibold tracking-tight transition-colors duration-150 flex items-center gap-1 cursor-pointer whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                    isOpen
+                      ? isDarkHero ? "text-ink" : "text-primary"
+                      : isDarkHero
+                      ? "text-ink/80 hover:text-ink"
+                      : "text-ink/75 hover:text-ink"
+                  }`}
+                >
+                  <span>{link.label}</span>
+                  {section && (
+                    <svg
+                      className={`w-3 h-3 transition-transform duration-150 opacity-60 ${
+                        isOpen ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                </Link>
+
+                {/* Transparent bridge: covers the 14px gap between nav and dropdown panel
+                    so moving the cursor into the dropdown does NOT trigger onMouseLeave */}
+                {isOpen && section && (
+                  <div className="absolute left-0 right-0 top-full h-5" />
+                )}
+
+                {/* Dropdown panel */}
+                <AnimatePresence>
+                  {isOpen && section && (
+                    <NavDropdown
+                      section={section}
+                      align={alignRight ? "right" : "left"}
+                      onClose={() => setActiveDropdown(null)}
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+
+          })}
         </nav>
 
-        {/* Right side: Language + Contact Us + Enquire Now (search button deleted) */}
-        <div className="flex items-center gap-2">
+        {/* ── Right side: Language + Enquire Now ─────────────────────────── */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
 
           {/* Language globe */}
           <div className="relative" onClick={(e) => e.stopPropagation()}>
@@ -244,20 +364,20 @@ export default function Header() {
               suppressHydrationWarning
               aria-label="Select language"
               onClick={() => setLangOpen(!langOpen)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[12px] font-medium transition-colors duration-150 ${
                 isDarkHero
-                  ? "text-white/90 hover:bg-white/15"
-                  : "text-ink hover:bg-black/5 font-medium"
+                  ? "text-white/90 hover:text-white"
+                  : "text-ink/65 hover:text-ink"
               }`}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
               </svg>
-              <span className="text-xs font-bold uppercase tracking-wide">{currentLang}</span>
+              <span className="text-[11px] font-bold uppercase tracking-wide">{currentLang}</span>
             </button>
 
-            {/* Dropdown — liquid glass panel with flags */}
+            {/* Language dropdown — liquid glass panel */}
             <AnimatePresence>
               {langOpen && (
                 <motion.div
@@ -267,10 +387,10 @@ export default function Header() {
                   transition={{ duration: 0.18 }}
                   className="absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden z-50 shadow-2xl"
                   style={{
-                    background: "rgba(255,255,255,0.95)",
-                    backdropFilter: "blur(28px)",
+                    background:           "rgba(255,255,255,0.97)",
+                    backdropFilter:       "blur(28px)",
                     WebkitBackdropFilter: "blur(28px)",
-                    border: "1px solid rgba(0,0,0,0.08)",
+                    border:               "1px solid rgba(0,0,0,0.08)",
                   }}
                 >
                   <div className="px-4 pt-3 pb-1">
@@ -300,42 +420,20 @@ export default function Header() {
             </AnimatePresence>
           </div>
 
-          {/* Separator */}
-          <div
-            className="w-px h-4"
-            style={{
-              background: isDarkHero ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)",
-            }}
-          />
-
-          {/* Contact Us */}
-          <a
-            href="/contact"
-            className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors whitespace-nowrap ${
-              isDarkHero
-                ? "border border-white/40 text-white hover:bg-white/15"
-                : "border border-ink/25 text-ink hover:bg-black/5"
-            }`}
-          >
-            Contact Us
-          </a>
-
-          {/* Enquire Now — original brand orange color */}
-          <a
-            href="/courses"
-            className="text-sm font-bold px-4 py-1.5 rounded-full bg-accent text-white hover:bg-accent-dark transition-colors whitespace-nowrap shadow-sm border border-accent-light/30"
+          {/* Enquire Now — always orange accent on both states */}
+          <button
+            type="button"
+            onClick={() => setEnquiryOpen(true)}
+            className="text-[12px] font-bold px-4 py-1.5 rounded-full transition-all duration-200 whitespace-nowrap shadow-sm active:scale-95 cursor-pointer bg-accent text-white hover:bg-accent-dark border border-accent-light/30"
           >
             Enquire Now
-          </a>
+          </button>
         </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          ANY OTHER VIEWPORT (< 1280px / xl:hidden)
-          Tablet, iPad, mobile, folding devices, and split-screen all show
-          the 3-button / 3-dot type layout!
-
-          [ ≡ (hamburger) ]      [ Logo ]      [ Enquire (before color) ]
+          MOBILE / TABLET (< 1280px)
+          [ ≡ hamburger ]   [ Logo ]   [ Enquire ]
           ═══════════════════════════════════════════════════════════════════ */}
       <div
         className={`flex xl:hidden items-center justify-between transition-all duration-300 ${
@@ -346,17 +444,16 @@ export default function Header() {
         style={
           !isDarkHero
             ? {
-                background: "rgba(255, 255, 255, 0.90)",
-                backdropFilter: "blur(24px) saturate(190%)",
+                background:           "rgba(255, 255, 255, 0.90)",
+                backdropFilter:       "blur(24px) saturate(190%)",
                 WebkitBackdropFilter: "blur(24px) saturate(190%)",
-                border: "1px solid rgba(0, 24, 48, 0.12)",
-                boxShadow:
-                  "0 10px 30px -8px rgba(0, 24, 48, 0.12), inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95)",
+                border:               "1px solid rgba(0, 24, 48, 0.12)",
+                boxShadow:            "0 10px 30px -8px rgba(0, 24, 48, 0.12), inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95)",
               }
             : undefined
         }
       >
-        {/* Hamburger / 3-dot circular button with border */}
+        {/* Hamburger */}
         <button
           type="button"
           suppressHydrationWarning
@@ -371,10 +468,10 @@ export default function Header() {
           style={
             isDarkHero
               ? {
-                  background: "rgba(255, 255, 255, 0.55)",
-                  backdropFilter: "blur(16px)",
+                  background:           "rgba(255, 255, 255, 0.55)",
+                  backdropFilter:       "blur(16px)",
                   WebkitBackdropFilter: "blur(16px)",
-                  border: "1px solid rgba(255, 255, 255, 0.70)",
+                  border:               "1px solid rgba(255, 255, 255, 0.70)",
                 }
               : undefined
           }
@@ -399,7 +496,7 @@ export default function Header() {
           />
         </a>
 
-        {/* Enquire — with BEFORE COLOR (accent orange) on mobile & tablet */}
+        {/* Enquire — accent orange on mobile */}
         <a
           href="/courses"
           className="text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap bg-accent text-white hover:bg-accent-dark shadow-sm active:scale-95 transition-all"
@@ -418,10 +515,10 @@ export default function Header() {
             transition={{ duration: 0.2 }}
             className="xl:hidden mt-2 overflow-hidden rounded-2xl shadow-2xl"
             style={{
-              background: "rgba(255,255,255,0.95)",
-              backdropFilter: "blur(28px)",
+              background:           "rgba(255,255,255,0.95)",
+              backdropFilter:       "blur(28px)",
               WebkitBackdropFilter: "blur(28px)",
-              border: "1px solid rgba(0,0,0,0.10)",
+              border:               "1px solid rgba(0,0,0,0.10)",
             }}
           >
             {/* Search */}
@@ -488,6 +585,14 @@ export default function Header() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Enquiry Modal */}
+      <EnquiryModal
+        isOpen={enquiryOpen}
+        onClose={() => setEnquiryOpen(false)}
+        defaultTrack="Academic & Tech Consultation"
+        title="Talk to an Academic Counsellor"
+      />
     </header>
   );
 }
