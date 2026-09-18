@@ -43,11 +43,35 @@ export default function PopularCourses() {
     return () => { isMounted = false; };
   }, []);
 
-  const categories = ["All", "AI & Data Science", "Web Development", "QA & Automation", "Enterprise Systems"];
+  const categories = [
+    "All",
+    "AI & Emerging Technology",
+    "Full Stack Development",
+    "Data Science & Analytics",
+    "Cybersecurity",
+    "Cloud & DevOps",
+    "Programming",
+    "Digital Marketing",
+    "Emerging Technologies",
+  ];
 
   const filteredCourses = selectedCategory === "All"
     ? coursesList
-    : coursesList.filter((c) => c.category === selectedCategory);
+    : coursesList.filter((c) => {
+        if (selectedCategory === "AI & Emerging Technology") {
+          return c.category === "AI & Emerging Technology" || c.category === "AI & Data Science";
+        }
+        if (selectedCategory === "Full Stack Development") {
+          return c.category === "Full Stack Development" || c.category === "Web Development";
+        }
+        if (selectedCategory === "Data Science & Analytics") {
+          return c.category === "Data Science & Analytics";
+        }
+        if (selectedCategory === "Digital Marketing") {
+          return c.category === "Digital Marketing" || c.category === "Marketing & Growth";
+        }
+        return c.category === selectedCategory;
+      });
 
   const handleEnquire = (course) => {
     setActiveCourse(course);
@@ -98,8 +122,8 @@ export default function PopularCourses() {
         </div>
 
         {/* Courses Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.slice(0, 6).map((course, idx) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {filteredCourses.slice(0, 8).map((course, idx) => (
             <motion.div
               key={course.slug || idx}
               initial={{ opacity: 0, y: 20 }}
